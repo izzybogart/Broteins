@@ -70,10 +70,10 @@ class Compear:
                                     "Orig_F_idx": i + self.minnumber - 1}, ignore_index=True)
                     #add identical match to document
                     sim_para.add_run(
-                        self.strsplit[i:r]
+                        self.str1[i:r]
                     )
                     sim_para.add_run(
-                        self.strsplit[r:(r + self.minnumber)]
+                        self.str1[r:(r + self.minnumber)]
                     ).font.highlight_color = WD_COLOR_INDEX.BRIGHT_GREEN
                     last_match_inx += r + self.minnumber
                     r += 1
@@ -88,7 +88,14 @@ class Compear:
                 self.str1[last_match_inx:len(self.str1)]
             )
         #see if this will add in the text from the data base to the document
-        doc.add_paragraph(df)
+        t = doc.add_table(self.df.shape[0]+1, self.df.shape[1])
+        #add header rows
+        for j in range(self.df.shape[-1]):
+            t.cell(0, j).text = self.df.columns[j]
+        #add the rest of the data frame
+        for i in range(self.df.shape[0]):
+            for j in range(self.df.shape[-1]):
+                t.cell(i+1, j).text = str(self.df.values[i, j])
         #need to add save to the users specification
         #doc.save('FileName')
 
