@@ -1,29 +1,167 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
 
-import time
-from datetime import datetime
 from tkinter import *
-from tkinter import messagebox
 from tkinter.ttk import *
+from tkinter import messagebox
+from datetime import datetime
+import time
+import pandas as pd
 
 import docx
-import pandas as pd
 from docx.enum.text import WD_COLOR_INDEX
 
 
-class Compear:
-    def __init__(self, string1, string2):
+class Compear():
+    def __init__(self, string1, string2, Output_name):
         self.str1 = string1.get().upper()
         self.str2 = string2.get().upper()
         self.minnumber = 3  # give by Lorenso
         self.strsplit = []
-        last_match_inx: int = 0
+        self.doc = docx.Document()
+        self.AminoTable = {"A": 1, "G": 1, "I": 2, "L": 2, "V": 2, "M": 3, "F": 4, "W": 4, "Y": 4, \
+                           "N": 5, "D": 5, "Q": 5, "E": 5, "C": 6, "S": 6, "T": 6, "R": 7, "K": 7, "H": 8, "P": 9}
 
-        # create an instance of the word doc
-        doc = docx.Document()
+        # Assuming heare everithing is alphabet letters only
+
+        self.str1_n = self.Protein_to_number(self.str1)
+        self.str2_n = self.Protein_to_number(self.str2)
+
+        self.Word_document_init(self.doc)
+
+        # split 1st string in the minnumber (3) exmp in "ABCD"
+        # out "ABC" and "BCD"
+        for i in range(len(self.str1_n) - self.minnumber + 1):
+            self.strsplit.append(self.str1_n[i:i + self.minnumber])
+
+        r = 0
+        # Iidx and Fidx belong to str2
+        df = pd.DataFrame(columns=["Match", "Iidx", "Fidx", "Origiidx", "Origfidx"])
+
+        # here we find all the exact matches and we save them to a df
+        for i in range(len(self.strsplit)):
+            while (r < len(self.str2_n) - self.minnumber and r != -1):
+                r = self.str2_n.find(self.strsplit[i], r)
+                if r != -1:
+                    df = df.append({"Match": self.strsplit[i],
+                                    "Iidx": r, "Fidx": r + self.minnumber - 1, "Origiidx": i,
+                                    "Origfidx": i + self.minnumber - 1}, ignore_index=True)
+                    r += 1
+
+            r = 0
+        print("Untill heart the df hass all the 3 exact matches")
+        self.df = df
+        print(df)
+        df_final = self.Number_to_protein(df, self.str1, self.str2)
+        print(df_final)
+
+        self.write_df_to_doc(df_final, self.doc)
+
+        self.mark_strings_in_word(df_final, self.doc)
+
+        # save still in test
+        self.Save_word_doc(Output_name, self.doc)
+
+    def extend_final_idx(self):
+        for i in range(self.df.shape[0]):
+            iidx = self.df.iloc[i][1]
+            fidx = self.df.iloc[i][2]  # final index location
+            oidx = self.df.iloc[i][3]
+            ad = self.minnumber
+            # sumand=0
+            f = (oidx + 1) + ad  # add one to companeste chacking
+            g = (fidx + 2)
+            while (f < len(self.str1)):
+
+                if (self.str1[oidx:f] == self.str2[iidx:g]):
+                    self.df.loc[i, "Fidx"] = g - 1
+                    self.df.loc[i, "Origfidx"] = f - 1
+                    self.df.loc[i, "Match"] = self.str1[oidx:f]
+                    f += 1
+                    if g < len(self.str2):
+                        g += 1
+                else:
+                    break
+
+        print("Matches with extended index are:")
+        print(self.df)
+
+    def write_df_to_doc(self, df, doc):
+        """
+        Write a Data frame to the word document
+
+        Atributes:
+            df: dataframe
+            doc: word document using docx library
+        Return:
+            None, changes made to the word document
+        """
+        t = doc.add_table(df.shape[0] + 1, df.shape[1])
+        # add header rows
+        for j in range(df.shape[-1]):
+            t.cell(0, j).text = df.columns[j]
+        # add the rest of the data frame
+        for i in range(df.shape[0]):
+            for j in range(df.shape[-1]):
+                t.cell(i + 1, j).text = str(df.values[i, j])
+
+    def Protein_to_number(self, string):
+        """
+        This will conbert the string to a specific grop of proteins for example
+            A is similar to G they will both be define as 1
+
+        """
+        st = ""
+        for i in string:
+            st += str(self.AminoTable[i])
+
+        return st
+
+    def Number_to_protein(self, df, st1, st2):
+        """
+        Combert the input numpy array back to protein gormat givving a clear mattching
+        of the proteins with index
+
+        Parameters
+        ----------
+        df : Data Frame
+            this will contain the matching string, initian anf final index of
+            the match in both strings
+        st1 : String 1
+            input for the user
+        st2 : String 2
+            input for the user
+        Returns
+        -------
+        Df with the all the matches and indexes
+        """
+        df2 = pd.DataFrame(columns=["String1", "Initial_idx", "Final_idx", "String2", "Initial_idx1", \
+                                    "Final_idx1", "Exact_match"])
+
+        for i in range(df.shape[0]):
+            idx1 = df.loc[i, "Origiidx"]
+            idx2 = df.loc[i, "Origfidx"]
+            idx3 = df.loc[i, "Iidx"]
+            idx4 = df.loc[i, "Fidx"]
+
+            df2.loc[i, "String1"] = self.str1[idx1:idx2 + 1]
+            df2.loc[i, "Initial_idx"] = idx1
+            df2.loc[i, "Final_idx"] = idx2
+            df2.loc[i, "String2"] = self.str2[idx3:idx4 + 1]
+            df2.loc[i, "Initial_idx1"] = idx3
+            df2.loc[i, "Final_idx1"] = idx4
+            if (self.str1[idx1:idx2 + 1] == self.str2[idx3:idx4 + 1]):  # if st1 == st2 is a exact match so 1
+                df2.loc[i, "Exact_match"] = 1
+            else:
+                df2.loc[i, "Exact_match"] = 0
+
+        return df2
+
+    def Save_word_doc(self, Title, doc):
+        doc.save(Title + '.docx')
+
+    def Word_document_init(self, doc):
         # add heading
         doc.add_heading('Comparison Outcome', 0)
         # add paragraph
@@ -38,97 +176,185 @@ class Compear:
             "highlighted. SIMILAR SEQUENCES: PINK HIGHLIGHT   IDENTICAL SEQUENCES: GREEN HIGHLIGHT"
         )
 
-        # Assuming heare everithing is alphabet letters only
-
-        # dictionary definition
-        """ migth be not good since we need to change the code a lot for this 
-            but can be use to split the short string instead that the 1st 
-        if len(self.str1)<len(self.str2):
-            print("str2 bigger...")
-            for i in range(len(self.str1)-self.minnumber):
-                self.strsplit.append(self.str1[i:i+self.minnumber])
-        else:
-            print("str1 is bigger or same size...")
-            for i in range(len(self.str2)-self.minnumber):
-                self.strsplit.append(self.str2[i:i+self.minnumber])
+    def mark_strings_in_word(self, df, doc):
         """
-        # split 1st string in the minnumber (3) exmp in "ABCD"
-        # out "ABC" and "BCD"
-        for i in range(len(self.str1) - self.minnumber + 1):
-            self.strsplit.append(self.str1[i:i + self.minnumber])
+        Write and higligth the strings in the word document
 
-        r = 0
-        df = pd.DataFrame(columns=["Match", "I_idx", "F_idx", "Orig_I_idx", "Orig_F_idx"])
+        Parameters
+        ----------
+        df : Pandas DataFrame
+            Contain the index that march in both strings
+        doc : Word Document
+            Document where we store all the strinfs
+        Returns
+        -------
+        None.
+        """
+        # here will need to sort the index
+        j: int = 0
+        i: int = 0
+        #First Protein
+        p1 = doc.add_paragraph("Protein #1:")
         sim_para = doc.add_paragraph()
-        # here we find all the exact matches and we save them to a df
-        for i in range(len(self.strsplit)):
-            while r < len(self.str2) - self.minnumber and r != -1:
-                r = self.str2.find(self.strsplit[i], r)
-                if r != -1:
-                    df = df.append({"Match": self.strsplit[i],
-                                    "I_idx": r, "F_idx": r + self.minnumber - 1, "Orig_I_idx": i,
-                                    "Orig_F_idx": i + self.minnumber - 1}, ignore_index=True)
-                    #add identical match to document
+
+        while i in range(df.shape[0]):
+            if j in range(len(self.str1)):
+                #print part of the string that does not have and similar or identical sequences
+                sim_para.add_run(self.str1[j:df.loc[i, "Initial_idx"]])
+                #check for runs that have the same starting index
+                if df.loc[i, "Initial_idx"] == df.loc[i+1, "Initial_idx"]:
+                    #find the range of the two runs
+                         rng_i = df.loc[i, "Final_idx"] - df.loc[i, "Initial_idx"]
+                    rng_i2 = df.loc[i+1, "Final_idx"] - df.loc[i+1,"Initial_idx"]
+                    # if the 2nd run has a larger range than the first one prioritize it
+                    if rng_i < rng_i2:
+                        #if it is an exact match highlight with turquoise
+                        if df.loc[i+1, "Exact_match"] == 1:
+                            sim_para.add_run(
+                                self.str1[df.loc[i+1, "Initial_idx"]:df.loc[i,"Final_idx"]]
+                            ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
+                        #else highlight it in pink
+                        else:
+                            sim_para.add_run(
+                                self.str1[df.loc[i + 1, "Initial_idx"]:df.loc[i, "Final_idx"]]
+                            ).font.highlight_color = WD_COLOR_INDEX.PINK
+                        #increment j
+                        j = df.loc[i + 1, "Final_idx"]
+                        #increment i so that next time around i + 1 will be skipped
+                        i = i + 1
+                    #if the ranges are the same check for which one is an exact match
+                    elif rng_i == rng_i2:
+                        if df.loc[i, "Exact_match"] == 1:
+                            sim_para.add_run(
+                                self.str1[df.loc[i,"Initial_idx"]:df.loc[i,"Final_idx"]]
+                            ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
+                        elif df.loc[i+1, "Exact_match"] == 1:
+                            sim_para.add_run(
+                                self.str1[df.loc[i+1,"Initial_idx"]:df.loc[i,"Final_idx"]]
+                            ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
+                        #if they are both just similarities highlight with pink
+                        else:
+                            sim_para.add_run(
+                                self.str1[df.loc[i,"Initial_idx"]:df.loc[i,"Final_idx"]]
+                            ).font.highlight_color = WD_COLOR_INDEX.PINK
+                        j = df.loc[i, "Final_idx"]
+                        i = i + 1
+                    #if run 1 has a larger range than run 2
+                    else:
+                        #if exact match highlight turquoise
+                        if df.loc[i, "Exact_match"] == 1:
+                            sim_para.add_run(
+                                self.str1[df.loc[i, "Initial_idx"]:df.loc[i,"Final_idx"]]
+                            ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
+                        #else highlight with pink
+                        else:
+                            sim_para.add_run(
+                                self.str1[df.loc[i, "Initial_idx"]:df.loc[i,"Final_idx"]]
+                            ).font.highlight_color = WD_COLOR_INDEX.PINK
+                        j = df.loc[i, "Final_idx"]
+                        i = i + 1
+                #if run i's initial index does not match i + 1's index then just
+                #check if it is an exact match or not and highlight accordingly
+                elif df.loc[i, "Exact_match"] == 1:
                     sim_para.add_run(
-                        self.str1[i:r]
-                    )
-                    sim_para.add_run(
-                        self.str1[r:(r + self.minnumber)]
-                    ).font.highlight_color = WD_COLOR_INDEX.BRIGHT_GREEN
-                    last_match_inx += r + self.minnumber
-                    r += 1
-
-            r = 0
-        print("Until heart the df has all the 3 exact matches")
-        self.df = df
-        print(df)
-        #clean up for the document
-        if last_match_inx != len(self.str1):
-            sim_para.add_run(
-                self.str1[last_match_inx:len(self.str1)]
-            )
-        #see if this will add in the text from the data base to the document
-        t = doc.add_table(self.df.shape[0]+1, self.df.shape[1])
-        #add header rows
-        for j in range(self.df.shape[-1]):
-            t.cell(0, j).text = self.df.columns[j]
-        #add the rest of the data frame
-        for i in range(self.df.shape[0]):
-            for j in range(self.df.shape[-1]):
-                t.cell(i+1, j).text = str(self.df.values[i, j])
-        #need to add save to the users specification
-        #doc.save('FileName')
-
-    def extend_final_idx(self):
-        for i in range(self.df.shape[0]):
-            iidx = self.df.iloc[i][1]
-            fidx = self.df.iloc[i][2]  # final index location
-            oidx = self.df.iloc[i][3]
-            ad = self.minnumber
-            # sumand=0
-            f = (oidx + 1) + ad  # add one to companeste chacking
-            g = (fidx + 2)
-            while f < len(self.str1):
-
-                if self.str1[oidx:f] == self.str2[iidx:g]:
-                    self.df.loc[i, "F_idx"] = g - 1
-                    self.df.loc[i, "Orig_F_idx"] = f - 1
-                    self.df.loc[i, "Match"] = self.str1[oidx:f]
-                    f += 1
-                    if g < len(self.str2):
-                        g += 1
+                        self.str1[df.loc[i, "Initial_idx"]:df.loc[i, "Final_idx"]]
+                    ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
+                    j = df.loc[i, "Final_idx"]
                 else:
-                    break
+                    sim_para.add_run(
+                        self.str1[df.loc[i, "Initial_idx"]:df.loc[i, "Final_idx"]]
+                    ).font.highlight_color = WD_COLOR_INDEX.PINK
+                    j = df.loc[i, "Final_idx"]
+            i = i + 1
+        #clean up
+        if j != len(self.str1):
+            sim_para.add_run(
+                self.str1[j:len(self.str1)]
+            )
+        #Second protein
+        i = 0
+        j = 0
+        #Sort data frame so index's of second sequence are in order (Ascending)
+        df.sort_values(by = "Initial_idx1")
+        p2 = doc.add_paragraph("Protein #2:")
+        sim_para = doc.add_paragraph()
+        while i in range(df.shape[0]):
+            if j in range(len(self.str1)):
+                #print part of the string           that does not have and similar or identical sequences
+                sim_para.add_run(self.str2[j:df.loc[i, "Initial_idx1"]])
+                #check for runs that have the same starting index
+                if df.loc[i, "Initial_idx1"] == df.loc[i+1, "Initial_idx1"]:
+                    #find the range of the two runs
+                    rng_i = df.loc[i, "Final_idx1"] - df.loc[i, "Initial_idx1"]
+                    rng_i2 = df.loc[i+1, "Final_idx1"] - df.loc[i+1,"Initial_idx1"]
+                    # if the 2nd run has a larger range than the first one prioritize it
+                    if rng_i < rng_i2:
+                        #if it is an exact match highlight with turquoise
+                        if df.loc[i+1, "Exact_match"] == 1:
+                            sim_para.add_run(
+                                self.str2[df.loc[i+1, "Initial_idx1"]:df.loc[i,"Final_idx1"]]
+                            ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
+                        #else highlight it in pink
+                        else:
+                            sim_para.add_run(
+                                self.str2[df.loc[i + 1, "Initial_idx1"]:df.loc[i, "Final_idx1"]]
+                            ).font.highlight_color = WD_COLOR_INDEX.PINK
+                        #increment j
+                        j = df.loc[i + 1, "Final_idx1"]
+                        #increment i so that next time around i + 1 will be skipped
+                        i = i + 1
+                    #if the ranges are the same check for which one is an exact match
+                    elif rng_i == rng_i2:
+                        if df.loc[i, "Exact_match"] == 1:
+                            sim_para.add_run(
+                                self.str2[df.loc[i,"Initial_idx1"]:df.loc[i,"Final_idx1"]]
+                            ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
+                        elif df.loc[i+1, "Exact_match"] == 1:
+                            sim_para.add_run(
+                                self.str2[df.loc[i+1,"Initial_idx1"]:df.loc[i,"Final_idx1"]]
+                            ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
+                        #if they are both just similarities highlight with pink
+                        else:
+                            sim_para.add_run(
+                                self.str2[df.loc[i,"Initial_idx1"]:df.loc[i,"Final_idx1"]]
+                            ).font.highlight_color = WD_COLOR_INDEX.PINK
+                        j = df.loc[i, "Final_idx1"]
+                        i = i + 1
+                    #if run 1 has a larger range than run 2
+                    else:
+                        #if exact match highlight turquoise
+                        if df.loc[i, "Exact_match"] == 1:
+                            sim_para.add_run(
+                                self.str2[df.loc[i, "Initial_idx1"]:df.loc[i,"Final_idx1"]]
+                            ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
+                        #else highlight with pink
+                        else:
+                            sim_para.add_run(
+                                self.str2[df.loc[i, "Initial_idx1"]:df.loc[i,"Final_idx1"]]
+                            ).font.highlight_color = WD_COLOR_INDEX.PINK
+                        j = df.loc[i, "Final_idx1"]
+                        i = i + 1
+                #if run i's initial index does not match i + 1's index then just
+                #check if it is an exact match or not and highlight accordingly
+                elif df.loc[i, "Exact_match"] == 1:
+                    sim_para.add_run(
+                        self.str2[df.loc[i, "Initial_idx1"]:df.loc[i, "Final_idx1"]]
+                    ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
+                    j = df.loc[i, "Final_idx1"]
+                else:
+                    sim_para.add_run(
+                        self.str2[df.loc[i, "Initial_idx1"]:df.loc[i, "Final_idx1"]]
+                    ).font.highlight_color = WD_COLOR_INDEX.PINK
+                    j = df.loc[i, "Final_idx1"]
+            i = i + 1
+        #clean up
+        if j != len(self.str2):
+            sim_para.add_run(
+                self.str2[j:len(self.str2)]
+            )
 
-        print("Matches with extended index are:")
-        print(self.df)
 
-    def extend_initial_idx(self):
-        return self.str1
-# In[2]:
-
-
-class GUI:
+class GUI():
     def __init__(self):
         """
         GUI is a class that creat the user interface to compate two strings
@@ -205,10 +431,10 @@ class GUI:
         self.e1.bind("<Key>", self.chektext)
         self.e2.bind("<Key>", self.chektext)
 
-        if self.v.get() == 1:
+        if (self.v.get() == 1):
             self.e3.config(state='disabled')  # need it for initialise disable
             self.outText.set(self.name)
-        elif self.v.get() == 2:
+        elif (self.v.get() == 2):
             self.outText.set(self.e3.get())
         else:
             self.e3.insert(0, "Error")
@@ -251,24 +477,28 @@ class GUI:
         """
         here we compare the proteins and update the task bar
         """
-        a = Compear(self.String1, self.String2)
+
+        # String check
+
+        a = Compear(self.String1, self.String2, self.outText.get())
+        self.bar['value'] += 50
+        self.window.update_idletasks()
         a.extend_final_idx()
-        x = 0
-        while x < 10:
+        x = 5
+        while (x < 10):
             self.bar['value'] += 10
             time.sleep(1)
             x += 1
             self.window.update_idletasks()
-
         self.mesagefinish()
 
     def chektext(self, event):
         """
             Check if we have text to enable or disable the buton run
         """
-        if self.e1.get() != "" and self.e2.get() != "":
+        if (self.e1.get() != "" and self.e2.get() != ""):
             self.b1.config(state='normal')
-        elif self.e1.get() == "" or self.e2.get() == "":
+        elif (self.e1.get() == "" or self.e2.get() == ""):
             self.b1.config(state='disabled')
 
     def startgui(self):
@@ -286,28 +516,30 @@ class GUI:
         print("String1     : " + str(self.String1.get()) + "\n")
         print("String2     : " + str(self.String2.get()) + "\n")
 
+    def string_preper(self):
+        """
+        Preper the strings to be compear
+        Returns
+        -------
+        None.
+        """
+        self.String1.get().upper()
+        self.String2.get().upper()
 
-# In[3]:
+        if (self.String1.get().isalpha() == False or self.String2.get().isalpha() == False):
+        # display warning that text not only contain letters
+
+        # exept letters
+        exep = ['B', 'J', 'O', 'U', 'X', 'Z']
+
+        for i in exep:
+            x = i in self.String1
+            y = i in self.String2
+            if (x == True or y == True):
+        # stop ptogram and say is a letter that dont have a protein associet with
+        # it
 
 
 a = GUI()
 
-# In[4]:
-
-
 a.startgui()
-
-# In[11]:
-
-
-# a.printinfo()
-
-
-# In[5]:
-
-
-# help(GUI)
-
-
-# In[6]:
-
