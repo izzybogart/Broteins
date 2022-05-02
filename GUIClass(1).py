@@ -20,8 +20,12 @@ class Compear():
         self.minnumber = 3  # give by Lorenso
         self.strsplit = []
         self.doc = docx.Document()
-        self.AminoTable = {"A": 1, "G": 1, "I": 2, "L": 2, "V": 2, "M": 3, "F": 4, "W": 4, "Y": 4, \
-                           "N": 5, "D": 5, "Q": 5, "E": 5, "C": 6, "S": 6, "T": 6, "R": 7, "K": 7, "H": 8, "P": 9}
+        self.AminoTable = {
+            "A": [1, 89.1], "G": [1, 75.07], "I": [2, 131.18], "L": [2, 131.18], "V": [2, 117.15],
+            "M": [3, 149.21], "F": [4, 165.19], "W": [4, 204.23], "Y": [4, 181.19], "N": [5, 132.12],
+            "D": [5, 133.11], "Q": [5, 146.15], "E": [5, 147.13], "C": [6, 121.16], "S": [6, 105.09],
+            "T": [6, 119.12], "R": [7, 174.2], "K": [7, 146.19], "H": [8, 155.16], "P": [9, 115.13]
+        }
 
         # Assuming heare everithing is alphabet letters only
 
@@ -114,9 +118,16 @@ class Compear():
         """
         st = ""
         for i in string:
-            st += str(self.AminoTable[i])
+            st += str(self.AminoTable[i][0])
 
         return st
+
+    def get_molecular_weight(self, string):
+        weight = 0
+        for i in string:
+            weight += self.AminoTable[i][1]
+
+        return weight
 
     def Number_to_protein(self, df, st1, st2):
         """
@@ -168,12 +179,18 @@ class Compear():
         para = doc.add_paragraph(
             "Original Sequence: " + self.str1
         )
+        mol_weight_str1 = doc.add_paragraph(
+            "Molecular Weight of Original Sequence: " + get_molecular_weight(self.str1)
+        )
         para0 = doc.add_paragraph(
             "Comparison Sequence: " + self.str2
         )
+        mol_weight_str2 = doc.add_paragraph(
+            "Molecular Weight of Comparison Sequence: " + get_molecular_weight(self.str2)
+        )
         para1 = doc.add_paragraph(
             "The following sequence will have the identical and similar sequences of the Comparison Sequence"
-            "highlighted. SIMILAR SEQUENCES: PINK HIGHLIGHT   IDENTICAL SEQUENCES: GREEN HIGHLIGHT"
+            "highlighted. SIMILAR SEQUENCES: PINK HIGHLIGHT   IDENTICAL SEQUENCES: TURQUOISE HIGHLIGHT"
         )
 
     def mark_strings_in_word(self, df, doc):
