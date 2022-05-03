@@ -214,7 +214,7 @@ class Compear():
         p1 = doc.add_paragraph("Protein #1:")
         sim_para = doc.add_paragraph()
 
-        while i in range(df.shape[0]):
+                while i in range(df.shape[0]):
             if j in range(len(self.str1)):
                 #print part of the string that does not have and similar or identical sequences
                 sim_para.add_run(self.str1[j:df.loc[i, "Initial_idx"]])
