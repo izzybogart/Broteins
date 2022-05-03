@@ -12,11 +12,14 @@ import pandas as pd
 import docx
 from docx.enum.text import WD_COLOR_INDEX
 
+import os 
+import csv
+
 
 class Compear():
     def __init__(self, string1, string2, Output_name):
-        self.str1 = string1.get().upper()
-        self.str2 = string2.get().upper()
+        self.str1 = string1.get().replace(" ", "").replace("\n", "")
+        self.str2 = string2.get().replace(" ", "").replace("\n", "")
         self.minnumber = 3  # give by Lorenso
         self.strsplit = []
         self.doc = docx.Document()
@@ -101,6 +104,29 @@ class Compear():
         Return:
             None, changes made to the word document
         """
+        df.to_csv("Table.csv",index=False)
+        
+        with open('Table.csv', newline='') as f:
+            csv_reader = csv.reader(f) 
+        
+            csv_headers = next(csv_reader)
+            csv_cols = len(csv_headers)
+        
+            table = doc.add_table(rows=2, cols=csv_cols)
+            hdr_cells = table.rows[0].cells
+        
+            for i in range(csv_cols):
+                hdr_cells[i].text = csv_headers[i]
+        
+            for row in csv_reader:
+                row_cells = table.add_row().cells
+                for i in range(csv_cols):
+                    row_cells[i].text = row[i]
+        
+        os.remove("Table.csv")
+        
+        
+        """
         t = doc.add_table(df.shape[0] + 1, df.shape[1])
         # add header rows
         for j in range(df.shape[-1]):
@@ -109,6 +135,8 @@ class Compear():
         for i in range(df.shape[0]):
             for j in range(df.shape[-1]):
                 t.cell(i + 1, j).text = str(df.values[i, j])
+                
+         """
 
     def Protein_to_number(self, string):
         """
@@ -544,6 +572,7 @@ class GUI():
         self.String2.get().upper()
 
         if (self.String1.get().isalpha() == False or self.String2.get().isalpha() == False):
+            print("Problem in sring")
         # display warning that text not only contain letters
 
         # exept letters
@@ -553,6 +582,7 @@ class GUI():
             x = i in self.String1
             y = i in self.String2
             if (x == True or y == True):
+                print("Problem in sring")
         # stop ptogram and say is a letter that dont have a protein associet with
         # it
 
