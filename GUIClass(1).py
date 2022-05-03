@@ -180,13 +180,13 @@ class Compear():
             "Original Sequence: " + self.str1
         )
         mol_weight_str1 = doc.add_paragraph(
-            "Molecular Weight of Original Sequence: " + get_molecular_weight(self.str1)
+            "Molecular Weight of Original Sequence: " + self.get_molecular_weight(self.str1)
         )
         para0 = doc.add_paragraph(
             "Comparison Sequence: " + self.str2
         )
         mol_weight_str2 = doc.add_paragraph(
-            "Molecular Weight of Comparison Sequence: " + get_molecular_weight(self.str2)
+            "Molecular Weight of Comparison Sequence: " + self.get_molecular_weight(self.str2)
         )
         para1 = doc.add_paragraph(
             "The following sequence will have the identical and similar sequences of the Comparison Sequence"
@@ -221,7 +221,7 @@ class Compear():
                 #check for runs that have the same starting index
                 if df.loc[i, "Initial_idx"] == df.loc[i+1, "Initial_idx"]:
                     #find the range of the two runs
-                         rng_i = df.loc[i, "Final_idx"] - df.loc[i, "Initial_idx"]
+                    rng_i = df.loc[i, "Final_idx"] - df.loc[i, "Initial_idx"]
                     rng_i2 = df.loc[i+1, "Final_idx"] - df.loc[i+1,"Initial_idx"]
                     # if the 2nd run has a larger range than the first one prioritize it
                     if rng_i < rng_i2:
