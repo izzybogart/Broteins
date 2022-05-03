@@ -544,7 +544,9 @@ class GUI():
         self.String2.get().upper()
 
         if (self.String1.get().isalpha() == False or self.String2.get().isalpha() == False):
+            messagebox.showwarning("showwarning", "Warning")
         # display warning that text not only contain letters
+            
 
         # exept letters
         exep = ['B', 'J', 'O', 'U', 'X', 'Z']
