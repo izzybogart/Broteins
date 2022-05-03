@@ -221,7 +221,7 @@ class Compear():
                 #check for runs that have the same starting index
                 if df.loc[i, "Initial_idx"] == df.loc[i+1, "Initial_idx"]:
                     #find the range of the two runs
-                         rng_i = df.loc[i, "Final_idx"] - df.loc[i, "Initial_idx"]
+                    rng_i = df.loc[i, "Final_idx"] - df.loc[i, "Initial_idx"]
                     rng_i2 = df.loc[i+1, "Final_idx"] - df.loc[i+1,"Initial_idx"]
                     # if the 2nd run has a larger range than the first one prioritize it
                     if rng_i < rng_i2:
