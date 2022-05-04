@@ -442,11 +442,11 @@ class GUI():
         l4.place(x=140, y=500)
 
         # run button
-        self.b1 = Button(self.window, text="Run", width=25, state='disabled', command=self.proteincompare)  # run button
+        self.b1 = Button(self.window, text="Run", width=25, state='normal', command=self.proteincompare)  # run button
         self.b1.place(x=700, y=525)
 
-        self.e1.bind("<Key>", self.chektext)
-        self.e2.bind("<Key>", self.chektext)
+        # self.e1.bind("<Key>", self.chektext)
+        # self.e2.bind("<Key>", self.chektext)
 
         if (self.v.get() == 1):
             self.e3.config(state='disabled')  # need it for initialise disable
@@ -513,14 +513,14 @@ class GUI():
 
 
 
-    def chektext(self, event):
-        """
-            Check if we have text to enable or disable the button run
-        """
-        if (self.e1.get() != "" or self.e2.get() != ""):
-            self.b1.config(state='normal')
-        # elif (self.e1.get() == "" and self.e2.get() == ""):
-        #     self.b1.config(state='disable')
+    # def chektext(self, event):
+    #     """
+    #         Check if we have text to enable or disable the button run
+    #     """
+    #     if (self.e1.get() != "" or self.e2.get() != ""):
+    #         self.b1.config(state='normal')
+    #     # elif (self.e1.get() == "" and self.e2.get() == ""):
+    #     #     self.b1.config(state='disable')
 
 
 
