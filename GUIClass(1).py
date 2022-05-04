@@ -445,8 +445,8 @@ class GUI():
         self.b1 = Button(self.window, text="Run", width=25, state='normal', command=self.proteincompare)  # run button
         self.b1.place(x=700, y=525)
 
-        # self.e1.bind("<Key>", self.chektext)
-        # self.e2.bind("<Key>", self.chektext)
+        #self.e1(self.string_prepar)
+        # self.e2("<Key>", self.string_prepar)
 
         if (self.v.get() == 1):
             self.e3.config(state='disabled')  # need it for initialise disable
@@ -495,9 +495,16 @@ class GUI():
         here we compare the proteins and update the task bar
         """
 
+        unaccepted_char = ['B', 'J', 'O', 'U', 'X', 'Z']
+
+        if (self.String1.get().isalpha() == False or self.String2.get().isalpha() == False):
+            messagebox.showwarning("Entry Warning", "Warning Special Characters not Excepted")
+
+
         # String check
         if (self.e1.get() == "" or self.e2.get() == ""):
             messagebox.showwarning("Entry Warning", "Warning, Empty Selection. Please ensure BOTH forms are filled.")
+
         else:
             a = Compear(self.String1, self.String2, self.outText.get())
             self.bar['value'] += 50
@@ -561,9 +568,9 @@ class GUI():
         self.String1.get().upper()
         self.String2.get().upper()
 
-        if (self.String1.get().isalpha() == False or self.String2.get().isalpha() == False):
-            messagebox.showwarning("Entry Warning", "Warning Special Characters not Excepted")
-            exit(1)
+        # if (self.String1.get().isalpha() == False or self.String2.get().isalpha() == False):
+        #     messagebox.showwarning("Entry Warning", "Warning Special Characters not Excepted")
+        #     exit(1)
 
 
         # display warning that text not only contain letters
