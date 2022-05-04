@@ -496,27 +496,34 @@ class GUI():
         """
 
         # String check
-
-        a = Compear(self.String1, self.String2, self.outText.get())
-        self.bar['value'] += 50
-        self.window.update_idletasks()
-        a.extend_final_idx()
-        x = 5
-        while (x < 10):
-            self.bar['value'] += 10
-            time.sleep(1)
-            x += 1
+        if (self.e1.get() == "" or self.e2.get() == ""):
+            messagebox.showwarning("Entry Warning", "Warning, Empty Selection. Please ensure BOTH forms are filled.")
+        else:
+            a = Compear(self.String1, self.String2, self.outText.get())
+            self.bar['value'] += 50
             self.window.update_idletasks()
-        self.mesagefinish()
+            a.extend_final_idx()
+            x = 5
+            while (x < 10):
+                self.bar['value'] += 10
+                time.sleep(1)
+                x += 1
+                self.window.update_idletasks()
+            self.mesagefinish()
+
+
 
     def chektext(self, event):
         """
             Check if we have text to enable or disable the button run
         """
-        if (self.e1.get() != "" and self.e2.get() != ""):
+        if (self.e1.get() != "" or self.e2.get() != ""):
             self.b1.config(state='normal')
-        elif (self.e1.get() == "" or self.e2.get() == ""):
-            self.b1.config(state='disabled')
+        # elif (self.e1.get() == "" and self.e2.get() == ""):
+        #     self.b1.config(state='disable')
+
+
+
 
     def startgui(self):
         """
@@ -542,23 +549,32 @@ class GUI():
         -------
         None.
         """
+        # Give Error If....
+        # entered strings have symbols
+        # entered strings have non-protein valued letters
+        # selection is empty
 
 
         # Except Letters.. these are NOT acronyms for proteins
-        # unaccepted = ['B', 'J', 'O', 'U', 'X', 'Z']
+        unaccepted = ['B', 'J', 'O', 'U', 'X', 'Z']
 
         self.String1.get().upper()
         self.String2.get().upper()
 
         if (self.String1.get().isalpha() == False or self.String2.get().isalpha() == False):
-            messagebox.showwarning("showwarning", "Warning Special Characters not Excepted")
+            messagebox.showwarning("Entry Warning", "Warning Special Characters not Excepted")
+            exit(1)
+
+
         # display warning that text not only contain letters
 
-        # for i in unaccepted:
-        #     x = i in self.String1
-        #     y = i in self.String2
-        #     if (x == True or y == True):
-        #         messagebox.showerror('Entry Error', 'Error: Symbols are not accepted as input!')
-        #         exit(1)
+        for i in unaccepted:
+            x = i in self.String1
+            y = i in self.String2
+            if (x == True or y == True):
+                messagebox.showerror('Entry Error', 'Error: Symbols are not accepted as input!')
+                exit(1)
+
+
 a = GUI()
 a.startgui()
