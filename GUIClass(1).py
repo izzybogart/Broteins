@@ -501,8 +501,9 @@ class GUI():
             if (x == True or y == True):
                 messagebox.showwarning('Entry Warning', 'Alphabetical value not part of Amino Acid dataset')
                 break
-
-        if (self.String1.get().isalpha() == False or self.String2.get().isalpha() == False):
+        self.String1=self.String1.get().replace(" ","").replace("/n")
+        self.String2 = self.String2.get().replace(" ", "").replace("/n")
+        if (self.String1.isalpha() == False or self.String2.isalpha() == False):
             messagebox.showwarning("Entry Warning", "Warning special characters not accepted")
 
 
