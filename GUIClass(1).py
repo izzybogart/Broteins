@@ -555,10 +555,9 @@ class GUI():
             x = i in self.String1
             y = i in self.String2
             if (x == True or y == True):
-        # stop ptogram and say is a letter that dont have a protein associet with
+                messagebox.showwarning("showwarning", "Warning")
+        # stop program and say is a letter that don't have a protein associate with
         # it
 
-
 a = GUI()
-
 a.startgui()
