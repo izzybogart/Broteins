@@ -511,7 +511,7 @@ class GUI():
 
     def chektext(self, event):
         """
-            Check if we have text to enable or disable the buton run
+            Check if we have text to enable or disable the button run
         """
         if (self.e1.get() != "" and self.e2.get() != ""):
             self.b1.config(state='normal')
@@ -533,31 +533,32 @@ class GUI():
         print("String1     : " + str(self.String1.get()) + "\n")
         print("String2     : " + str(self.String2.get()) + "\n")
 
+
     def string_preper(self):
         """
-        Preper the strings to be compear
+        Prepare the strings to be compared.
+        We can check for errors or characters that are not allowed
         Returns
         -------
         None.
         """
+
+
+        # Except Letters.. these are NOT acronyms for proteins
+        # unaccepted = ['B', 'J', 'O', 'U', 'X', 'Z']
+
         self.String1.get().upper()
         self.String2.get().upper()
 
         if (self.String1.get().isalpha() == False or self.String2.get().isalpha() == False):
-            messagebox.showwarning("showwarning", "Warning")
+            messagebox.showwarning("showwarning", "Warning Special Characters not Excepted")
         # display warning that text not only contain letters
-            
 
-        # exept letters
-        exep = ['B', 'J', 'O', 'U', 'X', 'Z']
-
-        for i in exep:
-            x = i in self.String1
-            y = i in self.String2
-            if (x == True or y == True):
-                messagebox.showwarning("showwarning", "Warning")
-        # stop program and say is a letter that don't have a protein associate with
-        # it
-
+        # for i in unaccepted:
+        #     x = i in self.String1
+        #     y = i in self.String2
+        #     if (x == True or y == True):
+        #         messagebox.showerror('Entry Error', 'Error: Symbols are not accepted as input!')
+        #         exit(1)
 a = GUI()
 a.startgui()
