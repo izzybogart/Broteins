@@ -445,9 +445,6 @@ class GUI():
         self.b1 = Button(self.window, text="Run", width=25, state='normal', command=self.proteincompare)  # run button
         self.b1.place(x=700, y=525)
 
-        #self.e1(self.string_prepar)
-        # self.e2("<Key>", self.string_prepar)
-
         if (self.v.get() == 1):
             self.e3.config(state='disabled')  # need it for initialise disable
             self.outText.set(self.name)
@@ -492,18 +489,27 @@ class GUI():
 
     def proteincompare(self):  # function to compare strings update bar and call msg finish
         """
-        here we compare the proteins and update the task bar
+        here we compare the proteins and update the task bar. Before however we will check the proteins are ready to
+        be compared. We will perform some error checks
         """
 
-        unaccepted_char = ['B', 'J', 'O', 'U', 'X', 'Z']
+        unaccepted_char = ['B', 'J', 'O', 'U', 'X', 'Z']        # Values not in Amino Acid Table
+
+        for i in unaccepted_char:                               #Iterate through string to find if there is unaccepted char
+            x = i in self.String1.get().upper()
+            y = i in self.String2.get().upper()
+            if (x == True or y == True):
+                messagebox.showwarning('Entry Warning', 'Alphabetical value not part of Amino Acid dataset')
+                break
 
         if (self.String1.get().isalpha() == False or self.String2.get().isalpha() == False):
-            messagebox.showwarning("Entry Warning", "Warning Special Characters not Excepted")
+            messagebox.showwarning("Entry Warning", "Warning special characters not accepted")
 
 
-        # String check
         if (self.e1.get() == "" or self.e2.get() == ""):
-            messagebox.showwarning("Entry Warning", "Warning, Empty Selection. Please ensure BOTH forms are filled.")
+            messagebox.showwarning("Entry Warning", "Warning, empty selection. Please ensure BOTH forms are filled.")
+
+        # IF no errors found we con proceed to compare the strings
 
         else:
             a = Compear(self.String1, self.String2, self.outText.get())
