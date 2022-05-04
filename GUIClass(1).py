@@ -221,10 +221,39 @@ class Compear():
             "highlighted. SIMILAR SEQUENCES: PINK HIGHLIGHT   IDENTICAL SEQUENCES: TURQUOISE HIGHLIGHT"
         )
 
+    def match_type(self, df,index):
+        if df.loc[index, "Exact_match"] == 1:
+            return 1
+        else:
+            return 0
+
+    def highlight_words(self, data_frame, string, doc, col):
+        sim_para = doc.add_paragraph()
+        i: int = 0
+        j: int = 0
+        while i in range(data_frame.shape[0]):
+            #if j in range(len(string)):
+            #sim_para.add_run(string[j:(df.loc[i, col[1]] + 1)])
+            if self.match_type(data_frame, i):
+                    sim_para.add_run(
+                        string[data_frame.loc[i, col[1]]:(data_frame.loc[i, col[2]] + 1)]
+                    ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
+            else:
+                    sim_para.add_run(
+                        string[data_frame.loc[i, col[1]]:(data_frame.loc[i, col[2]] + 1)]
+                    ).font.highlight_color = WD_COLOR_INDEX.PINK
+            #    j = j + df.loc[i, col[2]]
+            sim_para.add_run(" ")
+            i = i + 1
+        # clean up
+        if j != len(string):
+            sim_para.add_run(
+                string[j:len(string)]
+            )
+
     def mark_strings_in_word(self, df, doc):
         """
         Write and higligth the strings in the word document
-
         Parameters
         ----------
         df : Pandas DataFrame
@@ -235,168 +264,28 @@ class Compear():
         -------
         None.
         """
-        # here will need to sort the index
         j: int = 0
         i: int = 0
+        col_str1 = ["String1", "Initial_idx", "Final_idx", "Exact_match"]
+        # data frame for string 1
+        #df_str1 = self.remove_dup(df, col_str1)
+        col_str2 = ["String2", "Initial_idx1", "Final_idx1", "Exact_match"]
+        #data frame for string 2
+        #df_str2 = self.remove_dup(df, col_str2)
         #First Protein
-        p1 = doc.add_paragraph("Protein #1:")
-        sim_para = doc.add_paragraph()
+        #df_str1 = self.array_merge(df_str1, ["Initial_idx", "Final_idx"])
+        #df_str2 = self.array_merge(df_str2, ["Initial_idx1", "Final_idx1"])
 
-        while i in range(df.shape[0]):
-            if j in range(len(self.str1)):
-                #print part of the string that does not have and similar or identical sequences
-                sim_para.add_run(self.str1[j:df.loc[i, "Initial_idx"]])
-                #check for runs that have the same starting index
-                if df.loc[i, "Initial_idx"] == df.loc[i+1, "Initial_idx"]:
-                    #find the range of the two runs
-                    rng_i = df.loc[i, "Final_idx"] - df.loc[i, "Initial_idx"]
-                    rng_i2 = df.loc[i+1, "Final_idx"] - df.loc[i+1,"Initial_idx"]
-                    # if the 2nd run has a larger range than the first one prioritize it
-                    if rng_i < rng_i2:
-                        #if it is an exact match highlight with turquoise
-                        if df.loc[i+1, "Exact_match"] == 1:
-                            sim_para.add_run(
-                                self.str1[df.loc[i+1, "Initial_idx"]:df.loc[i,"Final_idx"]]
-                            ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
-                        #else highlight it in pink
-                        else:
-                            sim_para.add_run(
-                                self.str1[df.loc[i + 1, "Initial_idx"]:df.loc[i, "Final_idx"]]
-                            ).font.highlight_color = WD_COLOR_INDEX.PINK
-                        #increment j
-                        j = df.loc[i + 1, "Final_idx"]
-                        #increment i so that next time around i + 1 will be skipped
-                        i = i + 1
-                    #if the ranges are the same check for which one is an exact match
-                    elif rng_i == rng_i2:
-                        if df.loc[i, "Exact_match"] == 1:
-                            sim_para.add_run(
-                                self.str1[df.loc[i,"Initial_idx"]:df.loc[i,"Final_idx"]]
-                            ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
-                        elif df.loc[i+1, "Exact_match"] == 1:
-                            sim_para.add_run(
-                                self.str1[df.loc[i+1,"Initial_idx"]:df.loc[i,"Final_idx"]]
-                            ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
-                        #if they are both just similarities highlight with pink
-                        else:
-                            sim_para.add_run(
-                                self.str1[df.loc[i,"Initial_idx"]:df.loc[i,"Final_idx"]]
-                            ).font.highlight_color = WD_COLOR_INDEX.PINK
-                        j = df.loc[i, "Final_idx"]
-                        i = i + 1
-                    #if run 1 has a larger range than run 2
-                    else:
-                        #if exact match highlight turquoise
-                        if df.loc[i, "Exact_match"] == 1:
-                            sim_para.add_run(
-                                self.str1[df.loc[i, "Initial_idx"]:df.loc[i,"Final_idx"]]
-                            ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
-                        #else highlight with pink
-                        else:
-                            sim_para.add_run(
-                                self.str1[df.loc[i, "Initial_idx"]:df.loc[i,"Final_idx"]]
-                            ).font.highlight_color = WD_COLOR_INDEX.PINK
-                        j = df.loc[i, "Final_idx"]
-                        i = i + 1
-                #if run i's initial index does not match i + 1's index then just
-                #check if it is an exact match or not and highlight accordingly
-                elif df.loc[i, "Exact_match"] == 1:
-                    sim_para.add_run(
-                        self.str1[df.loc[i, "Initial_idx"]:df.loc[i, "Final_idx"]]
-                    ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
-                    j = df.loc[i, "Final_idx"]
-                else:
-                    sim_para.add_run(
-                        self.str1[df.loc[i, "Initial_idx"]:df.loc[i, "Final_idx"]]
-                    ).font.highlight_color = WD_COLOR_INDEX.PINK
-                    j = df.loc[i, "Final_idx"]
-            i = i + 1
-        #clean up
-        if j != len(self.str1):
-            sim_para.add_run(
-                self.str1[j:len(self.str1)]
-            )
-        #Second protein
-        i = 0
-        j = 0
-        #Sort data frame so index's of second sequence are in order (Ascending)
-        df.sort_values(by = "Initial_idx1")
-        p2 = doc.add_paragraph("Protein #2:")
+        doc.add_paragraph("Protein 1:")
+        #self.highlight_words(df_str1, self.str1, doc, col_str1)
         sim_para = doc.add_paragraph()
-        while i in range(df.shape[0]):
-            if j in range(len(self.str1)):
-                #print part of the string           that does not have and similar or identical sequences
-                sim_para.add_run(self.str2[j:df.loc[i, "Initial_idx1"]])
-                #check for runs that have the same starting index
-                if df.loc[i, "Initial_idx1"] == df.loc[i+1, "Initial_idx1"]:
-                    #find the range of the two runs
-                    rng_i = df.loc[i, "Final_idx1"] - df.loc[i, "Initial_idx1"]
-                    rng_i2 = df.loc[i+1, "Final_idx1"] - df.loc[i+1,"Initial_idx1"]
-                    # if the 2nd run has a larger range than the first one prioritize it
-                    if rng_i < rng_i2:
-                        #if it is an exact match highlight with turquoise
-                        if df.loc[i+1, "Exact_match"] == 1:
-                            sim_para.add_run(
-                                self.str2[df.loc[i+1, "Initial_idx1"]:df.loc[i,"Final_idx1"]]
-                            ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
-                        #else highlight it in pink
-                        else:
-                            sim_para.add_run(
-                                self.str2[df.loc[i + 1, "Initial_idx1"]:df.loc[i, "Final_idx1"]]
-                            ).font.highlight_color = WD_COLOR_INDEX.PINK
-                        #increment j
-                        j = df.loc[i + 1, "Final_idx1"]
-                        #increment i so that next time around i + 1 will be skipped
-                        i = i + 1
-                    #if the ranges are the same check for which one is an exact match
-                    elif rng_i == rng_i2:
-                        if df.loc[i, "Exact_match"] == 1:
-                            sim_para.add_run(
-                                self.str2[df.loc[i,"Initial_idx1"]:df.loc[i,"Final_idx1"]]
-                            ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
-                        elif df.loc[i+1, "Exact_match"] == 1:
-                            sim_para.add_run(
-                                self.str2[df.loc[i+1,"Initial_idx1"]:df.loc[i,"Final_idx1"]]
-                            ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
-                        #if they are both just similarities highlight with pink
-                        else:
-                            sim_para.add_run(
-                                self.str2[df.loc[i,"Initial_idx1"]:df.loc[i,"Final_idx1"]]
-                            ).font.highlight_color = WD_COLOR_INDEX.PINK
-                        j = df.loc[i, "Final_idx1"]
-                        i = i + 1
-                    #if run 1 has a larger range than run 2
-                    else:
-                        #if exact match highlight turquoise
-                        if df.loc[i, "Exact_match"] == 1:
-                            sim_para.add_run(
-                                self.str2[df.loc[i, "Initial_idx1"]:df.loc[i,"Final_idx1"]]
-                            ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
-                        #else highlight with pink
-                        else:
-                            sim_para.add_run(
-                                self.str2[df.loc[i, "Initial_idx1"]:df.loc[i,"Final_idx1"]]
-                            ).font.highlight_color = WD_COLOR_INDEX.PINK
-                        j = df.loc[i, "Final_idx1"]
-                        i = i + 1
-                #if run i's initial index does not match i + 1's index then just
-                #check if it is an exact match or not and highlight accordingly
-                elif df.loc[i, "Exact_match"] == 1:
-                    sim_para.add_run(
-                        self.str2[df.loc[i, "Initial_idx1"]:df.loc[i, "Final_idx1"]]
-                    ).font.highlight_color = WD_COLOR_INDEX.TURQUOISE
-                    j = df.loc[i, "Final_idx1"]
-                else:
-                    sim_para.add_run(
-                        self.str2[df.loc[i, "Initial_idx1"]:df.loc[i, "Final_idx1"]]
-                    ).font.highlight_color = WD_COLOR_INDEX.PINK
-                    j = df.loc[i, "Final_idx1"]
-            i = i + 1
-        #clean up
-        if j != len(self.str2):
-            sim_para.add_run(
-                self.str2[j:len(self.str2)]
-            )
+        self.highlight_words(df, self.str1, doc, col_str1)
+        #df2 = pd.DataFrame(df, columns=col_str2)
+        #df2.sort_values(by=col_str2[1])
+        doc.add_paragraph("Protein 2: ")
+        self.highlight_words(df, self.str2, doc, col_str2)
+
+        return df
 
 
 class GUI():
